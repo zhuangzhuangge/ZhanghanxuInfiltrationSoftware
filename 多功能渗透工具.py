@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import wx
 import wx.xrc
-import threading, Queue, sys,requests, re,telnetlib,ipaddr,socket,urllib2,traceback
+import threading, Queue,requests, re,telnetlib,ipaddr,socket,urllib2,traceback
 
 class YMFC(wx.Frame):    #域名反查框体
 
