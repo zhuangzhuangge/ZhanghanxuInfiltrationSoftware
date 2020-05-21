@@ -690,8 +690,7 @@ class XXSJ ( wx.Frame ):      #信息搜集框体
 		ym = self.input8.GetValue()
 		request = whatweb(ym)
 		# request=whatweb("http://www.xue338.com/")
-		# print(u"识别结果")
-		# print(request.json())
+
 		file = open('C:/Users/zhx/Desktop/XXSJ.txt', 'a+')
 		JG=str(request.json())
 		JG=JG.replace(',','\n\r')
@@ -714,21 +713,86 @@ class xssJC ( wx.Frame ):       #xss检测框体
 
 		bSizer9.Add( self.m_staticText8, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 
-		self.m_textCtrl8 = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
-		bSizer9.Add( self.m_textCtrl8, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND, 5 )
+		self.input9 = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
+		bSizer9.Add( self.input9, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND, 5 )
 
-		self.m_button23 = wx.Button( self, wx.ID_ANY, u"Start", wx.DefaultPosition, wx.DefaultSize, 0 )
-		bSizer9.Add( self.m_button23, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
+		self.m_button32 = wx.Button( self, wx.ID_ANY, u"Start", wx.DefaultPosition, wx.DefaultSize, 0 )
+		bSizer9.Add( self.m_button32, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 
 
 		self.SetSizer( bSizer9 )
 		self.Layout()
 
 		self.Centre( wx.BOTH )
+		self.m_button32.Bind(wx.EVT_BUTTON, self.start7)
 
 	def __del__( self ):
 		pass
 
+	def start7(self,event):
+		def urlsplit(url):
+			main_url = url.split("?")[0]
+			second_url = url.split("?")[-1]
+			dict = {}  # 建立空的字典
+			for val in second_url.split("&"):
+				dict[val.split("=")[0]] = val.split("=")[-1]  # 给字典填如键和值
+			urls = []
+			for val in dict.values():
+				new_url = main_url + '?' + second_url.replace(val, 'my_Payload')  # 结合
+				urls.append(new_url)
+			return urls
+
+		XSSURL = []
+		# url = input("域名:")
+		# url = 'https://wmathor.com/python/?a=1&b=2&c=3'
+		url=self.input9.GetValue()
+		urls=urlsplit(url)
+
+		f = open("XSSlist","r")
+		for i in f:
+			for _urls in urls:
+				_url = _urls.replace("my_Payload",i)
+				_url = _url + '+' + i
+				XSSURL.append(_url)
+
+		thread_count = 50
+		threads = []
+		queue = Queue.Queue()
+
+		for i in XSSURL:
+			queue.put(i)
+		for i in xrange(thread_count):
+			threads.append(XSSJC(queue))
+		for t in threads:
+			t.start()
+		for t in threads:
+			t.join()
+
+class XSSJC(threading.Thread):   #XSS检测框体
+    def __init__(self, queue):
+        threading.Thread.__init__(self)
+        self._queue = queue
+
+    def run(self):
+        while True:
+            if self._queue.empty():
+                break
+            try:
+                URLpayload = self._queue.get(timeout=0.5)
+                URL = URLpayload.split("+")[0]
+                payload = URLpayload.split("+")[-1]
+                response = requests.get(URL, timeout=5)
+                html_ = response.text
+                XSSfile = open('C:/Users/zhx/Desktop/XSSJC.txt', 'a+')
+                if (html_.find(payload) != -1):
+					XSSfile.write("XSS found:%s" % URL)
+                    #print("XSS found:%s" % URL)
+                else:
+					XSSfile.write('该payload未检测到XSS' + '\n')
+                    #print("该payload未检测到XSS")
+			    # XSSfile.close()
+            except:
+                continue
 
 class webshellSM ( wx.Frame ):           #webshell扫描框体
 
@@ -762,7 +826,7 @@ class webshellSM ( wx.Frame ):           #webshell扫描框体
 
 
 if __name__ == '__main__':
-    app = wx.App()  # 实例化APP
-    frame = home (None)  # frame的实例
-    frame.Show();
-    app.MainLoop()  # wxpython的启动函数
+	app = wx.App()  # 实例化APP
+	frame = home (None)  # frame的实例
+	frame.Show();
+	app.MainLoop()  # wxpython的启动函数
