@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-import wx
-import wx.xrc
-import threading, Queue,requests, re,telnetlib,ipaddr,socket,urllib2,traceback
-
+import wx,wx.xrc
+import threading, Queue
+import requests, re,telnetlib,ipaddr,socket,urllib2,traceback
+import zlib,json
 class home ( wx.Frame ):     #主页面框体
 
 	def __init__( self, parent ):
@@ -487,6 +487,7 @@ class CDSM ( wx.Frame ):     #C段HTTP端口扫描框体
 
 		self.input7 = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
 		bSizer5.Add( self.input7, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND, 5 )
+		self.m_textCtrl8 = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
 
 		self.m_button7 = wx.Button( self, wx.ID_ANY, u"Start", wx.DefaultPosition, wx.DefaultSize, 0 )
 		bSizer5.Add( self.m_button7, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
@@ -658,8 +659,8 @@ class XXSJ ( wx.Frame ):      #信息搜集框体
 
 		bSizer9.Add( self.m_staticText8, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 
-		self.m_textCtrl8 = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
-		bSizer9.Add( self.m_textCtrl8, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND, 5 )
+		self.input8 = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
+		bSizer9.Add( self.input8, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND, 5 )
 
 		self.m_button23 = wx.Button( self, wx.ID_ANY, u"Start", wx.DefaultPosition, wx.DefaultSize, 0 )
 		bSizer9.Add( self.m_button23, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
@@ -670,9 +671,33 @@ class XXSJ ( wx.Frame ):      #信息搜集框体
 
 		self.Centre( wx.BOTH )
 
+		self.m_button23.Bind(wx.EVT_BUTTON, self.start6)
+
 	def __del__( self ):
 		pass
 
+	def start6(self,event):
+		def whatweb(url):
+			response = requests.get(url, verify=False)
+			whatweb_dict = {"url": response.url, "text": response.text, "headers": dict(response.headers)}
+			whatweb_dict = json.dumps(whatweb_dict)
+			whatweb_dict = whatweb_dict.encode()
+			whatweb_dict = zlib.compress(whatweb_dict)
+			data = {"info": whatweb_dict}
+			return requests.post("http://whatweb.bugscaner.com/api.go", files=data)
+
+		# ym = raw_input('请输入网址:')
+		ym = self.input8.GetValue()
+		request = whatweb(ym)
+		# request=whatweb("http://www.xue338.com/")
+		# print(u"识别结果")
+		# print(request.json())
+		file = open('C:/Users/zhx/Desktop/XXSJ.txt', 'a+')
+		JG=str(request.json())
+		JG=JG.replace(',','\n\r')
+		JG = JG.replace('u', '')
+		file.write(JG)
+		file.close()
 
 
 class xssJC ( wx.Frame ):       #xss检测框体
