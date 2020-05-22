@@ -6,12 +6,10 @@ class RedisUN5(threading.Thread):
     def __init__(self, queue):
         threading.Thread.__init__(self)
         self._queue = queue
-
     def run(self):
         while True:
             if self._queue.empty():
                 break
-
             try:
                 URLpayload = self._queue.get(timeout=0.5)
                 URL = URLpayload.split("+")[0]
@@ -22,7 +20,6 @@ class RedisUN5(threading.Thread):
                     print("XSS found:%s" % URL)
                 else:
                     print("该payload未检测到XSS")
-
             except:
                 continue
 

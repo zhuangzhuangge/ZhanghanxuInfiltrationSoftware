@@ -74,10 +74,6 @@ class home2 ( wx.Frame ):    #单项渗透工具框体
 		self.m_button19 = wx.Button( self, wx.ID_ANY, u"XSS检测", wx.DefaultPosition, wx.DefaultSize, 0 )
 		gSizer1.Add( self.m_button19, 0, wx.ALL, 5 )
 
-		self.m_button20 = wx.Button( self, wx.ID_ANY, u"webshell扫描", wx.DefaultPosition, wx.DefaultSize, 0 )
-		gSizer1.Add( self.m_button20, 0, wx.ALL, 5 )
-
-
 		self.SetSizer( gSizer1 )
 		self.Layout()
 
@@ -90,7 +86,6 @@ class home2 ( wx.Frame ):    #单项渗透工具框体
 		self.m_button17.Bind(wx.EVT_BUTTON, self.switch5)
 		self.m_button18.Bind(wx.EVT_BUTTON, self.switch6)
 		self.m_button19.Bind(wx.EVT_BUTTON, self.switch7)
-		self.m_button20.Bind(wx.EVT_BUTTON, self.switch8)
 
 	def __del__( self ):
 		pass
@@ -130,11 +125,6 @@ class home2 ( wx.Frame ):    #单项渗透工具框体
 		F7 = xssJC(frame)
 		F7.Show()
 
-	def switch8(self, event):
-		event.Skip()
-		F8 = webshellSM(frame)
-		F8.Show()
-
 class ZDSTCS ( wx.Frame ):     #自动渗透测试框体
 
 	def __init__( self, parent ):
@@ -149,8 +139,8 @@ class ZDSTCS ( wx.Frame ):     #自动渗透测试框体
 
 		bSizer9.Add( self.m_staticText8, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 
-		self.m_textCtrl8 = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
-		bSizer9.Add( self.m_textCtrl8, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND, 5 )
+		self.input111 = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
+		bSizer9.Add( self.input111, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND, 5 )
 
 		self.m_button23 = wx.Button( self, wx.ID_ANY, u"Start", wx.DefaultPosition, wx.DefaultSize, 0 )
 		bSizer9.Add( self.m_button23, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
@@ -161,8 +151,110 @@ class ZDSTCS ( wx.Frame ):     #自动渗透测试框体
 
 		self.Centre( wx.BOTH )
 
+		self.m_button23.Bind( wx.EVT_BUTTON, self.start6)
+
+
 	def __del__( self ):
 		pass
+
+	def start6(self,event):
+		def whatweb(url):
+			response = requests.get(url, verify=False)
+			whatweb_dict = {"url": response.url, "text": response.text, "headers": dict(response.headers)}
+			whatweb_dict = json.dumps(whatweb_dict)
+			whatweb_dict = whatweb_dict.encode()
+			whatweb_dict = zlib.compress(whatweb_dict)
+			data = {"info": whatweb_dict}
+			return requests.post("http://whatweb.bugscaner.com/api.go", files=data)
+
+		# ym = raw_input('请输入网址:')
+		ym = self.input111.GetValue()
+		request = whatweb(ym)
+		# request=whatweb("http://www.xue338.com/")
+
+		file = open('C:/Users/zhx/Desktop/XXSJ.txt', 'a+')
+		JG=str(request.json())
+		JG=JG.replace(',','\n\r')
+		JG = JG.replace('u', '')
+		file.write(JG)
+		file.close()
+
+		def urlsplit(url):
+			main_url = url.split("?")[0]
+			second_url = url.split("?")[-1]
+			dict = {}  # 建立空的字典
+			for val in second_url.split("&"):
+				dict[val.split("=")[0]] = val.split("=")[-1]  # 给字典填如键和值
+			urls = []
+			for val in dict.values():
+				new_url = main_url + '?' + second_url.replace(val, 'my_Payload')  # 结合
+				urls.append(new_url)
+			return urls
+
+		XSSURL = []
+		# url = input("域名:")
+		# url = 'https://wmathor.com/python/?a=1&b=2&c=3'
+		url=self.input111.GetValue()
+		urls=urlsplit(url)
+
+		f = open("XSSlist","r")
+		for i in f:
+			for _urls in urls:
+				_url = _urls.replace("my_Payload",i)
+				_url = _url + '+' + i
+				XSSURL.append(_url)
+
+		thread_count = 50
+		threads = []
+		queue = Queue.Queue()
+
+		for i in XSSURL:
+			queue.put(i)
+		for i in xrange(thread_count):
+			threads.append(XSSJC(queue))
+		for t in threads:
+			t.start()
+		for t in threads:
+			t.join()
+
+	def start7(self,event):
+		def urlsplit(url):
+			main_url = url.split("?")[0]
+			second_url = url.split("?")[-1]
+			dict = {}  # 建立空的字典
+			for val in second_url.split("&"):
+				dict[val.split("=")[0]] = val.split("=")[-1]  # 给字典填如键和值
+			urls = []
+			for val in dict.values():
+				new_url = main_url + '?' + second_url.replace(val, 'my_Payload')  # 结合
+				urls.append(new_url)
+			return urls
+
+		XSSURL = []
+		# url = input("域名:")
+		# url = 'https://wmathor.com/python/?a=1&b=2&c=3'
+		url=self.input111.GetValue()
+		urls=urlsplit(url)
+
+		f = open("XSSlist","r")
+		for i in f:
+			for _urls in urls:
+				_url = _urls.replace("my_Payload",i)
+				_url = _url + '+' + i
+				XSSURL.append(_url)
+
+		thread_count = 50
+		threads = []
+		queue = Queue.Queue()
+
+		for i in XSSURL:
+			queue.put(i)
+		for i in xrange(thread_count):
+			threads.append(XSSJC(queue))
+		for t in threads:
+			t.start()
+		for t in threads:
+			t.join()
 
 
 class YMFC ( wx.Frame ):     #域名反查框体
@@ -768,7 +860,7 @@ class xssJC ( wx.Frame ):       #xss检测框体
 		for t in threads:
 			t.join()
 
-class XSSJC(threading.Thread):   #XSS检测框体
+class XSSJC(threading.Thread):   #XSS检测多线程
     def __init__(self, queue):
         threading.Thread.__init__(self)
         self._queue = queue
@@ -793,37 +885,6 @@ class XSSJC(threading.Thread):   #XSS检测框体
 			    # XSSfile.close()
             except:
                 continue
-
-class webshellSM ( wx.Frame ):           #webshell扫描框体
-
-	def __init__( self, parent ):
-		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.DefaultPosition, size = wx.Size( 500,300 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
-
-		self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
-
-		bSizer9 = wx.BoxSizer( wx.VERTICAL )
-
-		self.m_staticText8 = wx.StaticText( self, wx.ID_ANY, u"请输入域名", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.m_staticText8.Wrap( -1 )
-
-		bSizer9.Add( self.m_staticText8, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
-
-		self.m_textCtrl8 = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
-		bSizer9.Add( self.m_textCtrl8, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND, 5 )
-
-		self.m_button23 = wx.Button( self, wx.ID_ANY, u"Start", wx.DefaultPosition, wx.DefaultSize, 0 )
-		bSizer9.Add( self.m_button23, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
-
-
-		self.SetSizer( bSizer9 )
-		self.Layout()
-
-		self.Centre( wx.BOTH )
-
-	def __del__( self ):
-		pass
-
-
 
 if __name__ == '__main__':
 	app = wx.App()  # 实例化APP
